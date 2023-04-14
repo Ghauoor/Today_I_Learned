@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./style.css";
 
 const initialFacts = [
@@ -52,6 +53,7 @@ function App() {
         <CategoryFilter />
         <FactList />
       </main>
+      <Counter />
     </>
   );
 }
@@ -141,6 +143,23 @@ function Fact({ fact }) {
         <button>⛔️ {fact.votesMindblowing}</button>
       </div>
     </li>
+  );
+}
+
+function Counter() {
+  //before
+  //btn.addEventListener('click', some funcation()....)
+
+  //Destructure it
+  const [count, setCount] = useState(8);
+  // console.log(x);
+  return (
+    <div>
+      <span style={{ fontSize: "40px" }}>{count}</span>
+      <button className="btn btn-large" onClick={() => setCount((c) => c + 1)}>
+        +1
+      </button>
+    </div>
   );
 }
 
