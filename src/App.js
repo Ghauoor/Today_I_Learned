@@ -36,7 +36,17 @@ const initialFacts = [
 ];
 
 function App() {
+  /**
+   * Three Steps to use State in React
+   *
+   * 1. Define State Variable
+   * 2. Use State Variable
+   * 3. Update State Variable
+   * */
+  const [showForm, setShowForm] = useState(false);
+
   const appTittle = "Today I Learned";
+
   return (
     <>
       {/* HEADER */}
@@ -46,14 +56,18 @@ function App() {
           <h1>{appTittle}</h1>
         </div>
 
-        <button className="btn btn-large btn-open">Share a fact</button>
+        <button
+          className="btn btn-large btn-open"
+          onClick={() => setShowForm((show) => !show)}
+        >
+          Share a fact
+        </button>
       </header>
-      <NewFactForm />
+      {showForm ? <NewFactForm /> : null}
       <main className="main">
         <CategoryFilter />
         <FactList />
       </main>
-      <Counter />
     </>
   );
 }
