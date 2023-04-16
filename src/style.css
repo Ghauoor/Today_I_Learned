@@ -23,10 +23,17 @@ body {
   margin-top: 24;
 }
 
+.disputed {
+  color: #ef4444;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
 /* MAIN LAYOUT */
 #root {
   max-width: 1500px;
   margin: 0 auto;
+  height: 80vh;
 }
 
 .header {
@@ -45,6 +52,7 @@ body {
 @media (max-width: 900px) {
   .main {
     grid-template-columns: 1fr;
+    height: auto;
   }
 }
 
@@ -128,6 +136,9 @@ h1 {
 
 .vote-buttons button:hover {
   background-color: #292524;
+}
+.vote-buttons button:disabled {
+  background-color: #44403c;
 }
 
 ul {

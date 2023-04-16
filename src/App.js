@@ -65,12 +65,9 @@ function App() {
           .order("votesInteresting", { ascending: false })
           .limit(1000);
 
-        if (!error) {
-          setFacts(facts);
-          setIsLoading(false);
-        } else {
-          alert("There was a Problem geting Data");
-        }
+        if (!error) setFacts(facts);
+        else alert("There was a problem getting data");
+        setIsLoading(false);
 
         // setFacts(facts);
 
@@ -89,7 +86,11 @@ function App() {
       ) : null}
       <main className="main">
         <CategoryFilter setCurrentCategory={setCurrentCategory} />
-        {isLoading ? <Loader /> : <FactList facts={facts} />}
+        {isLoading ? (
+          <Loader />
+        ) : (
+          <FactList facts={facts} setFacts={setFacts} />
+        )}
       </main>
     </>
   );
@@ -120,6 +121,7 @@ function NewFactForm({ setFacts, setShowForm }) {
   const [text, setText] = useState("");
   const [source, setSource] = useState("");
   const [category, setCategory] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const textLength = text.length;
 
   async function handleSubmit(e) {
@@ -141,14 +143,15 @@ function NewFactForm({ setFacts, setShowForm }) {
       //   createdIn: new Date().getFullYear(),
       // };
       //3. upload fact to supabase and recieve new fact obj
-      const { newFact, error } = await supabase
+      setIsUploading(true);
+      const { data: newFact, error } = await supabase
         .from("facts")
         .insert([{ text, source, category }])
         .select();
+      setIsUploading(false);
 
-      console.log(newFact);
       //Add new fact to UI: add the fact to state
-      // setFacts((facts) => [newFact, ...facts]);
+      if (!error) setFacts((facts) => [newFact[0], ...facts]);
       //Reset i/p fields
       setText("");
       setSource("");
@@ -161,6 +164,7 @@ function NewFactForm({ setFacts, setShowForm }) {
   return (
     <form className="fact-form" onSubmit={handleSubmit}>
       <input
+        disabled={isUploading}
         type="text"
         placeholder="Share a fact with the world..."
         value={text}
@@ -168,6 +172,7 @@ function NewFactForm({ setFacts, setShowForm }) {
       />
       <span>{200 - textLength}</span>
       <input
+        disabled={isUploading}
         value={source}
         type="text"
         placeholder="Trustworthy source..."
@@ -181,7 +186,9 @@ function NewFactForm({ setFacts, setShowForm }) {
           </option>
         ))}
       </select>
-      <button className="btn btn-large">Post</button>
+      <button className="btn btn-large" disabled={isUploading}>
+        Post
+      </button>
     </form>
   );
 }
@@ -241,7 +248,7 @@ function CategoryFilter({ setCurrentCategory }) {
   );
 }
 
-function FactList({ facts }) {
+function FactList({ facts, setFacts }) {
   if (facts.length === 0) {
     return (
       <p className="message">
@@ -255,7 +262,7 @@ function FactList({ facts }) {
       <ul className="facts-form">
         {facts.map((fact) => (
           //Pass Prop
-          <Fact key={fact.id} fact={fact} />
+          <Fact key={fact.id} fact={fact} setFacts={setFacts} />
         ))}
       </ul>
       <p>There are {facts.length} facts in the Database</p>
@@ -263,11 +270,30 @@ function FactList({ facts }) {
   );
 }
 
-function Fact({ fact }) {
+function Fact({ fact, setFacts }) {
   // const {factObj} = props;
+  const [isUpdating, setIsUpdating] = useState(false);
+  const isDisputed =
+    fact.votesInteresting + fact.votesMindblowing < fact.votesFalse;
+  async function handleVote(columnName) {
+    setIsUpdating(true);
+    const { data: updatedFact, error } = await supabase
+      .from("facts")
+      .update({ [columnName]: fact[columnName] + 1 })
+      .eq("id", fact.id)
+      .select();
+    setIsUpdating(false);
+    console.log(updatedFact);
+    if (!error)
+      setFacts((facts) =>
+        facts.map((f) => (f.id === fact.id ? updatedFact[0] : f))
+      );
+  }
+
   return (
     <li className="fact">
       <p>
+        {isDisputed ? <span className="disputed">[⛔️DISPUTED]</span> : null}
         {fact.text}
         <a
           className="source"
@@ -288,9 +314,21 @@ function Fact({ fact }) {
         {fact.category}
       </span>
       <div className="vote-buttons">
-        <button>👍 {fact.votesInteresting}</button>
-        <button>🤯 {fact.votesMindblowing}</button>
-        <button>⛔️ {fact.votesMindblowing}</button>
+        <button
+          onClick={() => handleVote("votesInteresting")}
+          disabled={isUpdating}
+        >
+          👍 {fact.votesInteresting}
+        </button>
+        <button
+          onClick={() => handleVote("votesMindblowing")}
+          disabled={isUpdating}
+        >
+          🤯 {fact.votesMindblowing}
+        </button>
+        <button onClick={() => handleVote("votesFalse")} disabled={isUpdating}>
+          ⛔️ {fact.votesFalse}
+        </button>
       </div>
     </li>
   );
